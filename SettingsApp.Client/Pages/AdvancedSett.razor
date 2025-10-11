@@ -1,0 +1,143 @@
+﻿
+@* Pages/AdvancedSettings.razor *@
+@page "/advanced-settings"
+@using SettingsAPI.Models
+@using SettingsApp.Client.Models
+@using SettingsApp.Client.Services
+@attribute [Authorize(Roles = "Admin")]
+@inject ISettingsService SettingsService
+@inject NavigationManager NavigationManager
+
+<h3>Advanced Settings</h3>
+
+@if (isLoading)
+{
+    <div class="d-flex justify-content-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (settings == null || !isSuccess)
+{
+    <div class="alert alert-info">
+        No advanced settings found.
+    </div>
+}
+else
+{
+    @* <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Value</th>
+                    <th>Category</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var setting in settings)
+                {
+                    <tr>
+                        <td>@setting.RemoteAccessEnabled</td>
+                        <td>
+                            @if (editingId == setting.Id)
+                            {
+                                <input type="text" class="form-control" @bind="setting.RemoteAccessEnabled" />
+                            }
+                            else
+                            {
+                                @setting.RemoteAccessEnabled
+                            }
+                        </td>
+                        <td>@setting.RemoteAccessEnabled</td>
+                        <td>
+                            @if (editingId == setting.Id)
+                            {
+                                <button class="btn btn-success btn-sm me-2" @onclick="() => SaveSetting(setting)">Save</button>
+                                <button class="btn btn-secondary btn-sm" @onclick="CancelEdit">Cancel</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-primary btn-sm" @onclick="() => EditSetting(setting.Id)">Edit</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div> *@
+
+    <ul>
+        <li>EnableNotifications : @settings.DebugModeEnabled</li>
+        <li>DarkModeEnabled : @settings.DetailedLoggingEnabled</li>
+        <li>AutoSaveEnabled : @settings.BetaFeaturesEnabled</li>
+        <li>SoundEnabled : @settings.PerformanceMode</li>
+        <li>SoundEnabled : @settings.RemoteAccessEnabled</li>
+    </ul>
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert @(isSuccess ? "alert-success" : "alert-danger") mt-3">
+        @message
+    </div>
+}
+
+@code {
+    private AdvancedSettings settings = new();
+    private bool isLoading = true;
+    private string message = string.Empty;
+    private bool isSuccess = false;
+    private int editingId = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSettings();
+    }
+
+    private async Task LoadSettings()
+    {
+        try
+        {
+            isSuccess = true;
+            isLoading = true;
+            settings = await SettingsService.GetAdvancedSettings();
+        }
+        catch (Exception ex)
+        {
+            message = $"Error loading settings: {ex.Message}";
+            isSuccess = false;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void EditSetting(int id)
+    {
+        editingId = id;
+    }
+
+    private void CancelEdit()
+    {
+        editingId = 0;
+    }
+    private async Task SaveSetting(AdvancedSettings setting)
+    {
+        try
+        {
+            var result = await SettingsService.UpdateAdvancedSetting(setting);
+            message = "Setting updated successfully";
+            isSuccess = true;
+            editingId = 0;
+        }
+        catch (Exception ex)
+        {
+            message = $"Error updating setting: {ex.Message}";
+            isSuccess = false;
+        }
+    }
+}

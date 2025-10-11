@@ -1,0 +1,129 @@
+﻿
+@* Pages/Register.razor *@
+@page "/register"
+@using SettingsApp.Client.Models
+@using SettingsAPI.Models.DTOs
+@using SettingsApp.Client.Services
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Register</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@registerModel" OnValidSubmit="HandleRegister">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-group mb-3">
+                            <label for="username">Username</label>
+                            <InputText id="username" class="form-control" @bind-Value="registerModel.Username" />
+                            <ValidationMessage For="@(() => registerModel.Username)" />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="email">Email</label>
+                            <InputText id="email" class="form-control" @bind-Value="registerModel.Email" />
+                            <ValidationMessage For="@(() => registerModel.Email)" />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="password">Password</label>
+                            <InputText id="password" class="form-control" type="password" @bind-Value="registerModel.Password" />
+                            <ValidationMessage For="@(() => registerModel.Password)" />
+                        </div>
+
+                        @* <div class="form-group mb-3">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <InputText id="confirmPassword" class="form-control" type="password" @bind-Value="registerModel.ConfirmPassword" />
+                            <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
+                        </div> *@
+
+                        @if (!string.IsNullOrEmpty(message))
+                        {
+                            <div class="alert @(isSuccess ? "alert-success" : "alert-danger")">
+                                @message
+                            </div>
+                        }
+
+                        <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span> Loading...</span>
+                            }
+                            else
+                            {
+                                <span>Register</span>
+                            }
+                        </button>
+                    </EditForm>
+                </div>
+                <div class="card-footer">
+                    <a href="/login">Already have an account? Login here.</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private UserRegisterDto registerModel = new UserRegisterDto();
+    private string message = string.Empty;
+    private bool isLoading = false;
+    private bool isSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // If user is already logged in, redirect
+        if (await AuthService.IsLoggedIn())
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private async Task HandleRegister()
+    {
+        @* if (registerModel.Password != registerModel.ConfirmPassword)
+        {
+            message = "Passwords do not match";
+            isSuccess = false;
+            return;
+        } *@
+
+        isLoading = true;
+        message = string.Empty;
+
+        try
+        {
+            var result = await AuthService.Register(registerModel);
+
+            if (result != null)
+            {
+                isSuccess = true;
+                message = "Registration successful! You can now login.";
+                registerModel = new UserRegisterDto();
+                await Task.Delay(2000); // Short delay before redirecting
+                NavigationManager.NavigateTo("/login");
+            }
+            else
+            {
+                isSuccess = false;
+                message = "message from result.Message";
+            }
+        }
+        catch (Exception ex)
+        {
+            isSuccess = false;
+            message = "An error occurred. Please try again.";
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

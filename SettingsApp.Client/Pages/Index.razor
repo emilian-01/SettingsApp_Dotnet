@@ -1,0 +1,62 @@
+﻿
+@* Pages/Index.razor *@
+@page "/"
+@using SettingsApp.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Settings App</PageTitle>
+
+
+<div class="container mt-5">
+    <div class="jumbotron">
+        <h3 class="display-4">Welcome to Settings App!</h3>
+        <p class="lead">
+            This application allows you to manage various settings based on your role.
+        </p>
+        <hr class="my-4">
+        
+        <AuthorizeView>
+            <Authorized>
+                <p>You are currently logged in.</p>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary" @onclick="NavigateToBasicSettings">
+                        Go to Basic Settings
+                    </button>
+                    
+                    <AuthorizeView Roles="Admin">
+                        <Authorized Context="adminAuth">
+                            <button class="btn btn-success" @onclick="NavigateToAdvancedSettings">
+                                Go to Advanced Settings
+                            </button>
+                        </Authorized>
+                    </AuthorizeView>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <p>Please log in to access your settings.</p>
+                <div class="d-flex gap-2">
+                    <a href="/login" class="btn btn-primary">Login</a>
+                    <a href="/register" class="btn btn-secondary">Register</a>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+
+
+
+    </div>
+</div>
+
+
+@code {
+    private void NavigateToBasicSettings()
+    {
+        NavigationManager.NavigateTo("/basic-settings");
+    }
+
+    private void NavigateToAdvancedSettings()
+    {
+        NavigationManager.NavigateTo("/advanced-settings");
+    }
+}

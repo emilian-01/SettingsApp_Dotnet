@@ -1,0 +1,50 @@
+﻿@* Shared/MainLayout.razor *@
+
+@inherits LayoutComponentBase
+@using SettingsApp.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
+
+
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            @* <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a> *@
+
+            <AuthorizeView>
+                <Authorized>
+                    <span>Hello, @context.User.Identity?.Name</span>
+                    <button class="btn btn-link" @onclick="HandleLogout">Logout</button>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="login" class="btn btn-link">Login</a>
+                    <a href="register" class="btn btn-link">Register</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+
+@code {
+    private async Task HandleLogout()
+    {
+        await AuthService.Logout();
+        var authStateProvider = (AuthenticationStateProvider)AuthStateProvider;
+        ((SettingsApp.Client.Authentication.AuthStateProvider)authStateProvider).NotifyUserLogout();
+        NavigationManager.NavigateTo("/");
+    }
+}
+

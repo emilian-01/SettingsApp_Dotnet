@@ -1,0 +1,24 @@
+
+dotnet new blazorwasm -o SettingsApp.Client --framework net8.0
+dotnet sln SettingsAPI.sln add SettingsApp.Client/SettingsApp.Client.csproj
+
+
+dotnet add package Microsoft.AspNetCore.Components.WebAssembly --version 8.0.4
+dotnet add package Microsoft.AspNetCore.Components.WebAssembly.DevServer --version 8.0.4
+dotnet add package Microsoft.AspNetCore.Components.WebAssembly.Authentication --version 8.0.4
+dotnet add package Microsoft.Extensions.Http --version 8.0.4
+dotnet add package Microsoft.EntityFrameworkCore.Design --version 8.0.4
+
+dotnet ef migrations add InitialMigration
+dotnet ef database update
+
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer --version 8.0.4
+
+cd SettingsAPI
+dotnet clean
+dotnet run
+
+cd SettingsApp.Client
+dotnet clean
+dotnet run
+
