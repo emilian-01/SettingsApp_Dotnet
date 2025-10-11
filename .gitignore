@@ -366,7 +366,9 @@ FodyWeavers.xsd
 # Ignore sqlite files
 sqlite*
 *.db
-*.db-*
+*.db-shm
+*.db-wal
+
 
 SettingsApp.Client-deleted/
 
