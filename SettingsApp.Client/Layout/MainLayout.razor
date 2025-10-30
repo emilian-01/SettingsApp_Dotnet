@@ -27,7 +27,14 @@
 
             <AuthorizeView>
                 <Authorized>
-                    <span>Hello, @context.User.Identity?.Name</span>
+                    <span>Hello, @(context.User.Identity?.Name ?? context.User.FindFirst(ClaimTypes.Name)?.Value ?? "Userrrr")</span>
+                    @* Debug info - remove this later *@
+                    @* @if (context.User.Claims.Any())
+                    {
+                        <small style="color: gray; margin-left: 10px;">
+                            Claims: @string.Join(", ", context.User.Claims.Select(c => $"{c.Type}={c.Value}"))
+                        </small>
+                    } *@
                     <button class="btn btn-link" @onclick="HandleLogout">Logout</button>
                 </Authorized>
                 <NotAuthorized>

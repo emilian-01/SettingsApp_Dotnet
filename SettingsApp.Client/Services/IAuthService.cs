@@ -6,8 +6,8 @@ namespace SettingsApp.Client.Services
 {
     public interface IAuthService
     {
-        Task<UserDto> Login(UserLoginDto userLogin);
-        Task<UserDto> Register(UserRegisterDto userRegister);
+        Task<UserDto?> Login(UserLoginDto userLogin);
+        Task<UserDto?> Register(UserRegisterDto userRegister);
         Task Logout();
         Task<bool> IsLoggedIn();
         Task<string> GetUserRole();

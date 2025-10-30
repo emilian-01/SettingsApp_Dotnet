@@ -20,7 +20,7 @@ namespace SettingsApp.Client.Services
             _jsRuntime = jsRuntime;
         }
 
-        public async Task<UserDto> Login(UserLoginDto userLogin)
+        public async Task<UserDto?> Login(UserLoginDto userLogin)
         {
             var response = await _httpClient.PostAsJsonAsync("api/Auth/login", userLogin);
             var result = await response.Content.ReadFromJsonAsync<UserDto>();
@@ -35,7 +35,7 @@ namespace SettingsApp.Client.Services
             return result;
         }
 
-        public async Task<UserDto> Register(UserRegisterDto userRegister)
+        public async Task<UserDto?> Register(UserRegisterDto userRegister)
         {
             var response = await _httpClient.PostAsJsonAsync("api/Auth/register", userRegister);
             var result = await response.Content.ReadFromJsonAsync<UserDto>();

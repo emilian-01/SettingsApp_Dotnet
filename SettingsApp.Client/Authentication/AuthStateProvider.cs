@@ -30,7 +30,7 @@ namespace SettingsApp.Client.Authentication
 
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");
+            var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt", ClaimTypes.Name, ClaimTypes.Role);
             
             // Add role claim if not present in token
             if (!string.IsNullOrEmpty(role) && !identity.HasClaim(c => c.Type == ClaimTypes.Role))
@@ -45,7 +45,7 @@ namespace SettingsApp.Client.Authentication
 
         public void NotifyUserAuthentication(string token, string role)
         {
-            var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");
+            var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt", ClaimTypes.Name, ClaimTypes.Role);
             if (!string.IsNullOrEmpty(role))
             {
                 identity.AddClaim(new Claim(ClaimTypes.Role, role));
@@ -72,13 +72,22 @@ namespace SettingsApp.Client.Authentication
 
             if (keyValuePairs != null)
             {
-                keyValuePairs.TryGetValue(ClaimTypes.Role, out object? roles);
-
-                if (roles != null)
+                foreach (var kvp in keyValuePairs)
                 {
-                    if (roles.ToString()!.Trim().StartsWith("["))
+                    var claimType = kvp.Key switch
                     {
-                        var parsedRoles = JsonSerializer.Deserialize<string[]>(roles.ToString()!);
+                        "name" or "unique_name" or ClaimTypes.Name => ClaimTypes.Name,
+                        "email" or ClaimTypes.Email => ClaimTypes.Email,
+                        "role" or ClaimTypes.Role => ClaimTypes.Role,
+                        "nameid" or ClaimTypes.NameIdentifier => ClaimTypes.NameIdentifier,
+                        _ => kvp.Key
+                    };
+
+                    var value = kvp.Value?.ToString() ?? string.Empty;
+
+                    if (claimType == ClaimTypes.Role && value.Trim().StartsWith('['))
+                    {
+                        var parsedRoles = JsonSerializer.Deserialize<string[]>(value);
                         if (parsedRoles != null)
                         {
                             foreach (var parsedRole in parsedRoles)
@@ -89,13 +98,9 @@ namespace SettingsApp.Client.Authentication
                     }
                     else
                     {
-                        claims.Add(new Claim(ClaimTypes.Role, roles.ToString()!));
+                        claims.Add(new Claim(claimType, value));
                     }
-
-                    keyValuePairs.Remove(ClaimTypes.Role);
                 }
-
-                claims.AddRange(keyValuePairs.Select(kvp => new Claim(kvp.Key, kvp.Value.ToString() ?? string.Empty)));
             }
 
             return claims;
