@@ -29,6 +29,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using SettingsApp.Client;
 using SettingsApp.Client.Authentication;
 using SettingsApp.Client.Services;
+using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -50,6 +51,7 @@ builder.Services.AddHttpClient("AuthAPI", client =>
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>()
     .CreateClient("AuthAPI"));
 
+builder.Services.AddMudServices();
 // Add Authentication services
 builder.Services.AddScoped<AuthenticationStateProvider, AuthStateProvider>();
 builder.Services.AddAuthorizationCore();
@@ -57,5 +59,6 @@ builder.Services.AddAuthorizationCore();
 // Add our services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
+builder.Services.AddScoped<ITodosService, TodosService>();
 
 await builder.Build().RunAsync();

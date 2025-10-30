@@ -14,6 +14,7 @@ namespace SettingsAPI.Repositories
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<BasicSettings> BasicSettings { get; set; } = null!;
         public DbSet<AdvancedSettings> AdvancedSettings { get; set; } = null!;
+        public DbSet<Todo> Todos { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

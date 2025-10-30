@@ -3,10 +3,16 @@
 @inherits LayoutComponentBase
 @using SettingsApp.Client.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
 
 

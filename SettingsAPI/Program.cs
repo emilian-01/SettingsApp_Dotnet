@@ -35,11 +35,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBasicSettingsRepository, BasicSettingsRepository>();
 builder.Services.AddScoped<IAdvancedSettingsRepository, AdvancedSettingsRepository>();
+builder.Services.AddScoped<ITodosRepository, TodosRepository>();
 
 // Add services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBasicSettingsService, BasicSettingsService>();
 builder.Services.AddScoped<IAdvancedSettingsService, AdvancedSettingsService>();
+builder.Services.AddScoped<ITodosService, TodosService>();
 
 // Add JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

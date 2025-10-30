@@ -1,0 +1,225 @@
+﻿@page "/todos2"
+@using SettingsAPI.Models
+@using SettingsApp.Client.Services
+@inject ITodosService TodosService
+@inject NavigationManager Navigation
+@using MudBlazor
+@inject ISnackbar Snackbar
+@attribute [Authorize]
+@implements IDisposable
+
+
+<MudContainer MaxWidth="MaxWidth.Large">
+
+    <MudPaper Class="d-flex flex-grow-1 gap-4 mb-3" Elevation="0">
+        <MudText Typo="Typo.h4">Todos</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GoToCreate">Create New Todo</MudButton>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(searchString1))
+    {
+        <MudPaper Class="pa-3 mb-3" Elevation="1">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <MudIcon Icon="@Icons.Material.Filled.FilterList" Size="Size.Small" />
+                <MudText Typo="Typo.body2">Active search: <strong>@searchString1</strong></MudText>
+                <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="ClearSearch">Clear</MudButton>
+            </div>
+        </MudPaper>
+    }
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@errorMessage</MudAlert>
+    }
+    else
+    {
+        <MudTable Items="@todos" Hover="true" Bordered="true" Striped="true"
+            ServerData="@(new Func<TableState, CancellationToken, Task<TableData<TodoDto>>>(ServerReload))" @ref="table">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Todos</MudText>
+                <MudSpacer />
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <MudTextField Value="@searchString1" Placeholder="Search (e.g., title=task, description=good, or just text)" 
+                        Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
+                        IconSize="Size.Medium" Class="mt-0" @onkeyup="OnSearchKeyUp" 
+                        ValueChanged="@(EventCallback.Factory.Create<string>(this, OnSearchChanged))"
+                        Immediate="false" DebounceInterval="500" HelperText="Use field=value for specific searches"></MudTextField>
+                    <MudTooltip Text="Advanced Search Examples:&#10;• title=my task&#10;• description=important&#10;• id=5&#10;• title=task description=good&#10;• just regular text search">
+                        <MudIconButton Icon="@Icons.Material.Filled.Help" Size="Size.Small" />
+                    </MudTooltip>
+                </div>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>ID</MudTh>
+                <MudTh>Title</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+            @if (todos.Any())
+            {
+                <MudTd DataLabel="ID">
+                    <MudLink Href="@($"/todo/details/{context.Id}")">
+                        @context.Id
+                    </MudLink>
+                </MudTd>
+                <MudTd DataLabel="Name">@context.Title</MudTd>
+                <MudTd DataLabel="Name">@context.Description</MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                        OnClick="@(() => DeleteTodo(context.Id))" />
+                </MudTd>
+            }
+            else{
+                <p>No Todos found.</p>
+            }
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25, 50 }" />
+            </PagerContent>
+        </MudTable>
+    }
+
+</MudContainer>
+
+
+@code {
+    private string searchString1 = "";
+    private List<TodoDto> todos = new List<TodoDto>();
+    private string? errorMessage;
+    private bool isLoading = true;
+    private PagedResponse<TodoDto>? pagedResponse;
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private Timer? searchTimer;
+    private bool isSearchTriggered = false;
+    private MudTable<TodoDto>? table;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTodos();
+    }
+
+    private async Task LoadTodos()
+    {
+        isLoading = true;
+        var result = await TodosService.GetTodos(currentPage, pageSize, searchString1);
+        if (result.IsSuccess)
+        {
+            pagedResponse = result.Value!;
+            todos = pagedResponse.Data;
+        }
+        else
+        {
+            errorMessage = result.Error;
+        }
+        isLoading = false;
+        StateHasChanged();
+    }
+
+
+    private async Task<TableData<TodoDto>> ServerReload(TableState state, CancellationToken cancellationToken)
+    {
+        // If search was triggered, use page 1, otherwise use the state page
+        if (isSearchTriggered)
+        {
+            currentPage = 1;
+            isSearchTriggered = false;
+        }
+        else
+        {
+            currentPage = state.Page + 1; // MudBlazor uses 0-based indexing
+        }
+
+        pageSize = state.PageSize;
+
+        var result = await TodosService.GetTodos(currentPage, pageSize, searchString1);
+
+        if (result.IsSuccess)
+        {
+            pagedResponse = result.Value!;
+            todos = pagedResponse.Data;
+            errorMessage = null;
+
+            return new TableData<TodoDto>()
+            {
+                TotalItems = pagedResponse.TotalRecords,
+                Items = pagedResponse.Data
+            };
+        }
+        else
+        {
+            errorMessage = result.Error;
+            return new TableData<TodoDto>()
+            {
+                TotalItems = 0,
+                Items = new List<TodoDto>()
+            };
+        }
+    }
+
+    private async Task OnSearchKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            // Mark that search was triggered to reset to page 1
+            isSearchTriggered = true;
+            await table?.ReloadServerData()!;
+        }
+    }
+
+    private void OnSearchChanged(string value)
+    {
+        searchString1 = value;
+
+        // Cancel previous timer
+        searchTimer?.Dispose();
+
+        // Start new timer for debounced search
+        searchTimer = new Timer(async _ =>
+        {
+            await InvokeAsync(async () =>
+    {
+        // Mark that search was triggered to reset to page 1
+            isSearchTriggered = true;
+            await table?.ReloadServerData()!;
+            StateHasChanged();
+        });
+        }, null, 500, Timeout.Infinite); // 500ms delay
+    }
+    private async Task DeleteTodo(int id)
+    {
+        var result = await TodosService.DeleteTodos(id);
+        if (result.IsSuccess)
+        {
+            Snackbar.Add("Todo Deleted!", Severity.Info);
+            await table?.ReloadServerData()!; // Reload data from server
+        }
+        else
+        {
+            Snackbar.Add("Deletion Failed!", Severity.Error);
+        }
+    }
+
+    private async Task ClearSearch()
+    {
+        searchString1 = "";
+        isSearchTriggered = true;
+        await table?.ReloadServerData()!;
+    }
+
+    private void GoToCreate()
+    {
+        Navigation.NavigateTo("/todo/create");
+    }
+
+    public void Dispose()
+    {
+        searchTimer?.Dispose();
+    }
+}
