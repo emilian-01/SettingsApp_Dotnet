@@ -60,5 +60,6 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ISettingsService, SettingsService>();
 builder.Services.AddScoped<ITodosService, TodosService>();
+builder.Services.AddScoped<IUsersService, UsersService>();
 
 await builder.Build().RunAsync();

@@ -53,10 +53,30 @@ namespace SettingsAPI.Controllers
 
             var result = await _authService.CreateUserAsync(userCreateDto);
 
-            if (result == null)
-                return BadRequest("Failed to create user");
-
             return Ok(result);
+        }
+
+        [HttpGet("users")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
+        {
+            var users = await _authService.GetAllUsersAsync();
+            return Ok(users);
+        }
+
+        [HttpPut("users/{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateUser(int id, UserDto userDto)
+        {
+            if (id != userDto.Id)
+                return BadRequest();
+
+            var result = await _authService.UpdateUserAsync(id, userDto);
+
+            if (!result)
+                return NotFound();
+
+            return NoContent();
         }
     }
 }

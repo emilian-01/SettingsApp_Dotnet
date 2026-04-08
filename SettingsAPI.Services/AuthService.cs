@@ -183,5 +183,28 @@ namespace SettingsAPI.Services
             var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
             return computedHash.SequenceEqual(passwordHash);
         }
+
+        public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
+        {
+            var users = await _userRepository.GetAllUsersAsync();
+            return users.Select(user => new UserDto
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Role = user.Role
+            });
+        }
+
+        public async Task<bool> UpdateUserAsync(int id, UserDto userDto)
+        {
+            var user = await _userRepository.GetUserByIdAsync(id);
+            if (user == null)
+                return false;
+
+            user.Email = userDto.Email;
+            await _userRepository.UpdateUserAsync(user);
+            return true;
+        }
     }
 }

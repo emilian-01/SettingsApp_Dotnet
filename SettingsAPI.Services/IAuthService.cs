@@ -9,6 +9,8 @@ namespace SettingsAPI.Services
         Task<UserDto?> RegisterAsync(UserRegisterDto userRegisterDto);
         Task<UserDto?> LoginAsync(UserLoginDto userLoginDto);
         Task<UserDto?> CreateUserAsync(AdminCreateUserDto userCreateDto);
+        Task<IEnumerable<UserDto>> GetAllUsersAsync();
+        Task<bool> UpdateUserAsync(int id, UserDto userDto);
 
         Task<bool> UserExistsAsync(string username);
         string GenerateToken(User user);
