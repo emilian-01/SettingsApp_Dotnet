@@ -8,6 +8,8 @@ namespace SettingsAPI.Services
     {
         Task<UserDto?> RegisterAsync(UserRegisterDto userRegisterDto);
         Task<UserDto?> LoginAsync(UserLoginDto userLoginDto);
+        Task<UserDto?> CreateUserAsync(AdminCreateUserDto userCreateDto);
+
         Task<bool> UserExistsAsync(string username);
         string GenerateToken(User user);
         void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt);

@@ -105,6 +105,38 @@ namespace SettingsAPI.Services
             };
         }
 
+        public async Task<UserDto?> CreateUserAsync(AdminCreateUserDto userCreateDto)
+        {
+            CreatePasswordHash(userCreateDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
+
+            var user = new User
+            {
+                Username = userCreateDto.Username,
+                Email = userCreateDto.Email,
+                PasswordHash = passwordHash,
+                PasswordSalt = passwordSalt,
+                Role = userCreateDto.IsAdmin ? "Admin" : "User"
+            };
+
+            await _userRepository.CreateUserAsync(user);
+
+            // Create default settings for the new user
+            var basicSettings = new BasicSettings { UserId = user.Id };
+            await _basicSettingsRepository.CreateBasicSettingsAsync(basicSettings);
+
+            var advancedSettings = new AdvancedSettings { UserId = user.Id };
+            await _advancedSettingsRepository.CreateAdvancedSettingsAsync(advancedSettings);
+
+            return new UserDto
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Role = user.Role,
+                Token = GenerateToken(user)
+            };
+        }
+
         public async Task<bool> UserExistsAsync(string username)
         {
             return await _userRepository.GetUserByUsernameAsync(username) != null;

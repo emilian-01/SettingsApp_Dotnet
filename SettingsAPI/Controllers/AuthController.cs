@@ -1,4 +1,5 @@
 ﻿// SettingsAPI/Controllers/AuthController.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SettingsAPI.Models.DTOs;
 using SettingsAPI.Services;
@@ -39,6 +40,21 @@ namespace SettingsAPI.Controllers
 
             if (result == null)
                 return Unauthorized("Invalid username or password");
+
+            return Ok(result);
+        }
+
+        [HttpPost("create-user")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<UserDto>> CreateUser(AdminCreateUserDto userCreateDto)
+        {
+            if (await _authService.UserExistsAsync(userCreateDto.Username))
+                return BadRequest("Username already exists");
+
+            var result = await _authService.CreateUserAsync(userCreateDto);
+
+            if (result == null)
+                return BadRequest("Failed to create user");
 
             return Ok(result);
         }

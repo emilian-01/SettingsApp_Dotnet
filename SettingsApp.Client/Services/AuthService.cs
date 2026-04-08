@@ -44,6 +44,12 @@ namespace SettingsApp.Client.Services
             return result;
         }
 
+        public async Task<UserDto?> CreateUser(AdminCreateUserDto userCreate)
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/Auth/create-user", userCreate);
+            return await response.Content.ReadFromJsonAsync<UserDto>();
+        }
+
         public async Task Logout()
         {
             await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "authToken");

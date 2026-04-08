@@ -1,0 +1,107 @@
+
+@page "/create-user"
+@using Microsoft.AspNetCore.Authorization
+@using SettingsAPI.Models.DTOs
+@using SettingsApp.Client.Services
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@attribute [Authorize(Roles = "Admin")]
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Create New User</h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@createUserModel" OnValidSubmit="HandleCreateUser">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-group mb-3">
+                            <label for="username">Username</label>
+                            <InputText id="username" class="form-control" @bind-Value="createUserModel.Username" />
+                            <ValidationMessage For="@(() => createUserModel.Username)" />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="email">Email</label>
+                            <InputText id="email" class="form-control" @bind-Value="createUserModel.Email" />
+                            <ValidationMessage For="@(() => createUserModel.Email)" />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="password">Password</label>
+                            <InputText id="password" class="form-control" type="password" @bind-Value="createUserModel.Password" />
+                            <ValidationMessage For="@(() => createUserModel.Password)" />
+                        </div>
+
+                        <div class="form-group form-check mb-3">
+                            <InputCheckbox id="isAdmin" class="form-check-input" @bind-Value="createUserModel.IsAdmin" />
+                            <label class="form-check-label" for="isAdmin">Create as Admin</label>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(message))
+                        {
+                            <div class="alert @(isSuccess ? "alert-success" : "alert-danger")">
+                                @message
+                            </div>
+                        }
+
+                        <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span>Creating...</span>
+                            }
+                            else
+                            {
+                                <span>Create User</span>
+                            }
+                        </button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private AdminCreateUserDto createUserModel = new AdminCreateUserDto();
+    private string message = string.Empty;
+    private bool isLoading = false;
+    private bool isSuccess = false;
+
+    private async Task HandleCreateUser()
+    {
+        isLoading = true;
+        message = string.Empty;
+
+        try
+        {
+            var result = await AuthService.CreateUser(createUserModel);
+
+            if (result != null)
+            {
+                isSuccess = true;
+                message = "User created successfully!";
+                createUserModel = new AdminCreateUserDto();
+            }
+            else
+            {
+                isSuccess = false;
+                message = "An error occurred while creating the user.";
+            }
+        }
+        catch (Exception ex)
+        {
+            isSuccess = false;
+            message = "An error occurred. Please try again.";
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
